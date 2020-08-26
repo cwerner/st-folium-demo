@@ -7,6 +7,7 @@ import numpy as np
 import datetime
 from datetime import datetime
 from dwdweather import DwdWeather
+from folium import plugins
 
 st.beta_set_page_config(page_title="DWD Stations")
 
@@ -188,6 +189,13 @@ m.fit_bounds(bounds)
 feature_group_tereno.add_to(m)
 feature_group_dwd.add_to(m)
 folium.LayerControl(collapsed=True).add_to(m)
+
+plugins.Fullscreen(
+    position='topright',
+    title='Expand me',
+    title_cancel='Exit me',
+    force_separate_button=True
+).add_to(m)
 
 # call to render Folium map in Streamlit
 folium_static(m)
