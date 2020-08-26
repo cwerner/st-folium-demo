@@ -166,7 +166,12 @@ for station in closest_stations:
 
 
 # distance circle
-folium.Circle(radius=dist * 1000, location=ifu, color="crimson", fill=False).add_to(m)
+folium.Circle(radius=dist * 1000, 
+              location=ifu,
+              dash_array="5",
+              tooltip=f"{dist} km to IFU",  
+              color="crimson", 
+              fill=False).add_to(m)
 
 
 # fit bounds
