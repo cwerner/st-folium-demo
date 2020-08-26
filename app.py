@@ -12,7 +12,7 @@ from folium import plugins
 st.beta_set_page_config(page_title="DWD Stations")
 
 @st.cache
-def find_close_stations(dist: int=20, res='hourly'):
+def find_close_stations(dist: int=50, res='hourly'):
     "Find closest stations (dist: radius in km)"
 
     ifu = (47.476111, 11.062777)
@@ -56,7 +56,7 @@ st.write("# DWD stations near IMK-IFU/ KIT 🏔🌦")
 
 res = st.sidebar.selectbox("Data resolution", ["10min", "hourly", "daily"])
 
-dist = st.sidebar.slider("Distance to IFU [km]", min_value=10, max_value=100, value=20, step=5)
+dist = st.sidebar.slider("Distance to IFU [km]", min_value=10, max_value=150, value=50, step=5)
 closest_stations = find_close_stations(dist=dist, res=res)
 
 
@@ -141,20 +141,25 @@ folium.Marker(
 
 
 # tereno stations
-tereno_stations = ['Fendth', 'Grasswang', 'Rottenbuch']
-for station in tereno_stations:
-    pass
-    # folium.Marker(
-    #     (station['geo_lat'], station['geo_lon']),
-    #     tooltip = f"{station['name']} (id:{station['station_id']})",
-    #     #popup = f"{station['name']} (id:{station['station_id']})",
-        
-    #     popup = folium.Popup(max_width=300).add_child(
-    #         folium.VegaLite(create_chart(dummy_df), width=300, height=100)
-    #     ),
-    #     icon=folium.Icon(color='red', icon='info-sign')
-    # ).add_to(feature_group_tereno)
+tereno_stations = [{'name': 'Fendth',
+                    'geo_lat': 47.83243,
+                    'geo_lon': 11.06111
+                    }, 
+                   {'name': 'Grasswang',
+                    'geo_lat': 47.57026,
+                    'geo_lon': 11.03189                   
+                   },
+                   {'name': 'Rottenbuch',
+                    'geo_lat': 47.73032,
+                    'geo_lon': 11.03189
+                   }]
 
+for station in tereno_stations:
+    folium.Marker(
+        (station['geo_lat'], station['geo_lon']),
+        tooltip = f"{station['name']} (TERENO)",
+        icon=folium.Icon(color='green', icon='info-sign')
+    ).add_to(feature_group_tereno)
 
 # dwd stations
 for station in closest_stations:
