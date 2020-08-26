@@ -9,7 +9,7 @@ from dwdweather import DwdWeather
 st.beta_set_page_config(page_title="DWD Stations")
 
 @st.cache
-def find_close_stations(dist: int=50, res='10min'):
+def find_close_stations(dist: int=20, res='hourly'):
     "Find closest stations (dist: radius in km)"
 
     ifu = (47.476111, 11.062777)
@@ -25,7 +25,7 @@ def find_close_stations(dist: int=50, res='10min'):
 
 
 #@st.cache
-def fetch_data(res='10min'):
+def fetch_data(res='hourly'):
 
     ifu = (47.476111, 11.062777)
 
@@ -52,10 +52,17 @@ def fetch_data(res='10min'):
 
 st.write("# DWD stations near IMK-IFU/ KIT 🏔🌦")
 
+style = st.sidebar.selectbox("Map style", ['Stamen Toner', 
+                                           'Stamen Terrain',
+                                           'Stamen Watercolor',
+                                           'OpenStreetMap',
+                                           'CartoDB Positron'])
+
 res = st.sidebar.selectbox("Data resolution", ["10min", "hourly", "daily"])
 
 dist = st.sidebar.slider("Distance to IFU [km]", min_value=10, max_value=100, value=20, step=5)
 closest_stations = find_close_stations(dist=dist, res=res)
+
 
 @st.cache
 def compute_center_coordinate(stations):
@@ -105,8 +112,8 @@ icon = folium.features.CustomIcon(icon_url,
 
 # center on IFU (Campus Alpin)
 m = folium.Map(location=compute_center_coordinate(closest_stations), 
-               tiles="Stamen Terrain", 
-               zoom_start=7)
+               tiles=style) #, 
+#               zoom_start=8)
 
 # add marker for ifu
 info = """<b>KIT Campus Alpin</b></br>
@@ -127,6 +134,14 @@ for station in closest_stations:
         popup = f"{station['name']} (id:{station['station_id']})",
         icon=folium.Icon(color='red', icon='info-sign')
     ).add_to(m)
+
+
+folium.Circle(
+    radius=dist*1000,
+    location=ifu,
+    color='crimson',
+    fill=False,
+).add_to(m)
 
 
 # fit bounds
