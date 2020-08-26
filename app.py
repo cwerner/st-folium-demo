@@ -53,12 +53,6 @@ def fetch_data(res='hourly'):
 
 st.write("# DWD stations near IMK-IFU/ KIT 🏔🌦")
 
-style = st.sidebar.selectbox("Map style", ['Stamen Toner', 
-                                           'Stamen Terrain',
-                                           'Stamen Watercolor',
-                                           'OpenStreetMap',
-                                           'CartoDB Positron'])
-
 res = st.sidebar.selectbox("Data resolution", ["10min", "hourly", "daily"])
 
 dist = st.sidebar.slider("Distance to IFU [km]", min_value=10, max_value=100, value=20, step=5)
@@ -122,9 +116,14 @@ icon = folium.features.CustomIcon(icon_url,
                                   icon_size=(32, 32))
 
 # center on IFU (Campus Alpin)
-m = folium.Map(location=compute_center_coordinate(closest_stations), 
-               tiles=style) #, 
-#               zoom_start=8)
+m = folium.Map(location=compute_center_coordinate(closest_stations), tiles=None)
+
+folium.TileLayer('Stamen Toner', name='Stamen Toner').add_to(m)
+folium.TileLayer('Stamen Terrain', name='Stamen Terrain').add_to(m)
+folium.TileLayer('Stamen Watercolor', name='Stamen Watercolor').add_to(m)
+folium.TileLayer('OpenStreetMap', name='OpenStreetMap').add_to(m)
+folium.LayerControl(collapsed=True).add_to(m)
+
 
 # add marker for ifu
 info = """<b>KIT Campus Alpin</b></br>
