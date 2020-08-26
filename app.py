@@ -1,6 +1,8 @@
 import streamlit as st
 from streamlit_folium import folium_static
 import folium
+import altair as alt
+import pandas as pd
 import numpy as np
 import datetime
 from datetime import datetime
@@ -39,7 +41,6 @@ def fetch_data(res='hourly'):
 
     # Find closest station to position.
     closest = dwd.nearest_station(lat=ifu[0], lon=ifu[1])
-    #closest = dwd.nearest_station(lon=11.062777, lat=47.476111, surrounding=10000)
 
     st.write(closest)
 
@@ -78,6 +79,16 @@ def compute_bounds(stations):
     max_lon = np.array([x['geo_lon'] for x in stations]).max()
     return [[float(min_lat), float(min_lon)],
             [float(max_lat), float(max_lon)]]
+
+
+
+@st.cache
+def create_chart(df):
+    "Create (dummy) charts for popup items"
+    chart = (alt.Chart(df).mark_line()
+                          .encode(x='a', y='b')
+                          .properties(height=100))
+    return chart.to_json()
 
 
 def filter_by_dates(stations, start, end):
@@ -127,15 +138,24 @@ folium.Marker(
     ifu, tooltip=info, popup=info_popup, icon=icon
 ).add_to(m)
 
+
 for station in closest_stations:
+
+    dummy_df = pd.DataFrame({'a': range(100), 'b': np.cumsum(np.random.normal(0, 0.1, 100))})
+
     folium.Marker(
         (station['geo_lat'], station['geo_lon']),
         tooltip = f"{station['name']} (id:{station['station_id']})",
-        popup = f"{station['name']} (id:{station['station_id']})",
+        #popup = f"{station['name']} (id:{station['station_id']})",
+        
+        popup = folium.Popup(max_width=300).add_child(
+            folium.VegaLite(create_chart(dummy_df), width=300, height=100)
+        ),
         icon=folium.Icon(color='red', icon='info-sign')
     ).add_to(m)
 
 
+# distance circle 
 folium.Circle(
     radius=dist*1000,
     location=ifu,
