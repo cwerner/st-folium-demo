@@ -117,12 +117,13 @@ icon = folium.features.CustomIcon(icon_url,
 
 # center on IFU (Campus Alpin)
 m = folium.Map(location=compute_center_coordinate(closest_stations), tiles=None)
-
 folium.TileLayer('Stamen Toner', name='Stamen Toner').add_to(m)
 folium.TileLayer('Stamen Terrain', name='Stamen Terrain').add_to(m)
 folium.TileLayer('Stamen Watercolor', name='Stamen Watercolor').add_to(m)
 folium.TileLayer('OpenStreetMap', name='OpenStreetMap').add_to(m)
-folium.LayerControl(collapsed=True).add_to(m)
+
+feature_group_tereno = folium.FeatureGroup("TERENO Sites")
+feature_group_dwd = folium.FeatureGroup("DWD Sites", control=False)
 
 
 # add marker for ifu
@@ -138,6 +139,23 @@ folium.Marker(
 ).add_to(m)
 
 
+# tereno stations
+tereno_stations = ['Fendth', 'Grasswang', 'Rottenbuch']
+for station in tereno_stations:
+    pass
+    # folium.Marker(
+    #     (station['geo_lat'], station['geo_lon']),
+    #     tooltip = f"{station['name']} (id:{station['station_id']})",
+    #     #popup = f"{station['name']} (id:{station['station_id']})",
+        
+    #     popup = folium.Popup(max_width=300).add_child(
+    #         folium.VegaLite(create_chart(dummy_df), width=300, height=100)
+    #     ),
+    #     icon=folium.Icon(color='red', icon='info-sign')
+    # ).add_to(feature_group_tereno)
+
+
+# dwd stations
 for station in closest_stations:
 
     dummy_df = pd.DataFrame({'a': range(100), 'b': np.cumsum(np.random.normal(0, 0.1, 100))})
@@ -151,7 +169,7 @@ for station in closest_stations:
             folium.VegaLite(create_chart(dummy_df), width=300, height=100)
         ),
         icon=folium.Icon(color='red', icon='info-sign')
-    ).add_to(m)
+    ).add_to(feature_group_dwd)
 
 
 # distance circle 
@@ -167,6 +185,9 @@ folium.Circle(
 bounds = compute_bounds(closest_stations)
 m.fit_bounds(bounds)
 
+feature_group_tereno.add_to(m)
+feature_group_dwd.add_to(m)
+folium.LayerControl(collapsed=True).add_to(m)
 
 # call to render Folium map in Streamlit
 folium_static(m)
