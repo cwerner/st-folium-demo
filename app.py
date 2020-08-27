@@ -9,10 +9,14 @@ from datetime import datetime
 from dwdweather import DwdWeather
 from folium import plugins
 
+# prometheus_client metrics to time function execution timings
+from utils import REGISTRY
+METRICS = REGISTRY.get_metrics()
+
 st.beta_set_page_config(page_title="DWD Stations")
 
-
 @st.cache
+@METRICS.REQUEST_TIME.time()
 def find_close_stations(dist: int = 50, res="hourly"):
     "Find closest stations (dist: radius in km)"
 

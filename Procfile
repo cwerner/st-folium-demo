@@ -1,2 +1,2 @@
-web: streamlit run app.py
+web: streamlit run --global.metrics=true app.py
 
