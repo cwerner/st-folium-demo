@@ -8,54 +8,66 @@ import datetime
 from datetime import datetime
 from dwdweather import DwdWeather
 from folium import plugins
+from enum import Enum
 
 # prometheus_client metrics to time function execution timings
 from utils import REGISTRY
+
 METRICS = REGISTRY.get_metrics()
+
+
+class RES(Enum):
+    TENMIN = "10_minutes"
+    HOURLY = "hourly"
+    DAILY = "daily"
+
 
 st.beta_set_page_config(page_title="DWD Stations")
 
+
 @st.cache
 @METRICS.REQUEST_TIME.time()
-def find_close_stations(dist: int = 50, res="hourly"):
+def find_close_stations(dist: int = 50, res: RES = RES.HOURLY):
     "Find closest stations (dist: radius in km)"
 
     ifu = (47.476111, 11.062777)
 
-    mapper = {"10min": "10_minutes", "hourly": "hourly", "daily": "daily"}
+    # mapper = {"10min": "10_minutes", "hourly": "hourly", "daily": "daily"}
 
-    dwd = DwdWeather(resolution=mapper[res])
-    closest = dwd.nearest_station(lat=ifu[0], lon=ifu[1], surrounding=dist * 1000)
-    return closest
+    dwd = DwdWeather(resolution=res.value)
+    return dwd.nearest_station(lat=ifu[0], lon=ifu[1], surrounding=dist * 1000)
 
 
 # @st.cache
-def fetch_data(res="hourly"):
+def fetch_data(res: RES = RES.HOURLY):
 
     ifu = (47.476111, 11.062777)
 
-    mapper = {"10min": "10_minutes", "hourly": "hourly", "daily": "daily"}
+    # mapper = {"10min": "10_minutes", "hourly": "hourly", "daily": "daily"}
 
     # Create client object.
-    dwd = DwdWeather(resolution=mapper[res])
+    dwd = DwdWeather(resolution=RES.value)
 
     # Find closest station to position.
-    closest = dwd.nearest_station(lat=ifu[0], lon=ifu[1])
+    nearest = dwd.nearest_station(lat=ifu[0], lon=ifu[1])
 
-    st.write(closest)
+    st.write(nearest)
 
     # The hour you're interested in.
     # The example is 2014-03-22 12:00 (UTC).
     query_hour = datetime(2014, 3, 22, 12, 10)
 
-    result = dwd.query(station_id=closest["station_id"], timestamp=query_hour)
+    result = dwd.query(station_id=nearest["station_id"], timestamp=query_hour)
     return result
 
 
 st.write("# DWD stations near IMK-IFU/ KIT 🏔🌦")
 
-res = st.sidebar.selectbox("Data resolution", ["10min", "hourly", "daily"])
-
+res = st.sidebar.selectbox(
+    "Data resolution",
+    [RES.TENMIN, RES.HOURLY, RES.DAILY],
+    format_func=lambda x: x.value.replace("_", " ").capitalize(),
+)
 dist = st.sidebar.slider(
     "Distance to IFU [km]", min_value=10, max_value=150, value=50, step=5
 )
@@ -170,12 +182,14 @@ for station in closest_stations:
 
 
 # distance circle
-folium.Circle(radius=dist * 1000, 
-              location=ifu,
-              dash_array="5",
-              tooltip=f"{dist} km to IFU",  
-              color="crimson", 
-              fill=False).add_to(m)
+folium.Circle(
+    radius=dist * 1000,
+    location=ifu,
+    dash_array="5",
+    tooltip=f"{dist} km to IFU",
+    color="crimson",
+    fill=False,
+).add_to(m)
 
 
 # fit bounds
