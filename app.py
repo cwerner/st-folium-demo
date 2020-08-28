@@ -15,12 +15,24 @@ from utils import REGISTRY
 
 METRICS = REGISTRY.get_metrics()
 
+# ifu 
+ifu = {"name": "IFU", "geo_lat": 47.476180, "geo_lon": 11.063350}
+
+# tereno stations
+tereno_stations = [
+    {"name": "Fendth", "geo_lat": 47.83243, "geo_lon": 11.06111},
+    {"name": "Grasswang", "geo_lat": 47.57026, "geo_lon": 11.03189},
+    {"name": "Rottenbuch", "geo_lat": 47.73032, "geo_lon": 11.03189},
+]
 
 class RES(Enum):
     TENMIN = "10_minutes"
     HOURLY = "hourly"
     DAILY = "daily"
 
+    @staticmethod
+    def names():
+        return list(map(lambda c: c, RES))
 
 st.beta_set_page_config(page_title="DWD Stations")
 
@@ -30,12 +42,8 @@ st.beta_set_page_config(page_title="DWD Stations")
 def find_close_stations(dist: int = 50, res: RES = RES.HOURLY):
     "Find closest stations (dist: radius in km)"
 
-    ifu = (47.476111, 11.062777)
-
-    # mapper = {"10min": "10_minutes", "hourly": "hourly", "daily": "daily"}
-
     dwd = DwdWeather(resolution=res.value)
-    return dwd.nearest_station(lat=ifu[0], lon=ifu[1], surrounding=dist * 1000)
+    return dwd.nearest_station(lat=ifu["geo_lat"], lon=ifu["geo_lon"], surrounding=dist * 1000)
 
 
 # @st.cache
@@ -43,13 +51,11 @@ def fetch_data(res: RES = RES.HOURLY):
 
     ifu = (47.476111, 11.062777)
 
-    # mapper = {"10min": "10_minutes", "hourly": "hourly", "daily": "daily"}
-
     # Create client object.
     dwd = DwdWeather(resolution=RES.value)
 
     # Find closest station to position.
-    nearest = dwd.nearest_station(lat=ifu[0], lon=ifu[1])
+    nearest = dwd.nearest_station(lat=ifu["geo_lat"], lon=ifu["geo_lon"])
 
     st.write(nearest)
 
@@ -65,7 +71,7 @@ st.write("# DWD stations near IMK-IFU/ KIT 🏔🌦")
 
 res = st.sidebar.selectbox(
     "Data resolution",
-    [RES.TENMIN, RES.HOURLY, RES.DAILY],
+    RES.names(),
     format_func=lambda x: x.value.replace("_", " ").capitalize(),
 )
 dist = st.sidebar.slider(
@@ -149,12 +155,6 @@ info_popup = info + '<a href="https://www.imk-ifu.kit.edu" target="_blank">Homep
 folium.Marker(ifu, tooltip=info, popup=info_popup, icon=icon).add_to(m)
 
 
-# tereno stations
-tereno_stations = [
-    {"name": "Fendth", "geo_lat": 47.83243, "geo_lon": 11.06111},
-    {"name": "Grasswang", "geo_lat": 47.57026, "geo_lon": 11.03189},
-    {"name": "Rottenbuch", "geo_lat": 47.73032, "geo_lon": 11.03189},
-]
 
 for station in tereno_stations:
     folium.Marker(
