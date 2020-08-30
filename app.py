@@ -1,5 +1,4 @@
 import datetime
-from enum import Enum
 
 import altair as alt
 import folium
@@ -10,33 +9,12 @@ from dwdweather import DwdWeather
 from folium import plugins
 from streamlit_folium import folium_static
 
+from datastructures import RES, ifu, tereno_stations
+
 # prometheus_client metrics to time function execution timings
 from utils import REGISTRY
 
 METRICS = REGISTRY.get_metrics()
-
-# ifu
-ifu = {"name": "IFU", "geo_lat": 47.476180, "geo_lon": 11.063350}
-
-# tereno stations
-tereno_stations = [
-    {"name": "Fendth", "geo_lat": 47.83243, "geo_lon": 11.06111},
-    {"name": "Grasswang", "geo_lat": 47.57026, "geo_lon": 11.03189},
-    {"name": "Rottenbuch", "geo_lat": 47.73032, "geo_lon": 11.03189},
-]
-
-
-class RES(Enum):
-    TENMIN = "10_minutes"
-    HOURLY = "hourly"
-    DAILY = "daily"
-
-    @staticmethod
-    def names():
-        return list(map(lambda c: c, RES))
-
-
-st.beta_set_page_config(page_title="DWD Stations")
 
 
 @st.cache
@@ -110,6 +88,8 @@ def filter_by_dates(stations, start, end):
 
 
 def main():
+    st.beta_set_page_config(page_title="DWD Stations")
+
     st.write("# DWD stations near IMK-IFU/ KIT 🏔🌦")
 
     res = st.sidebar.selectbox(
