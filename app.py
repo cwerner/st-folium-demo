@@ -1,4 +1,5 @@
 import datetime
+from typing import Collection, Tuple
 
 import altair as alt
 import folium
@@ -10,16 +11,16 @@ from folium import plugins
 from streamlit_folium import folium_static
 
 from datastructures import RES, ifu, tereno_stations
-
-# prometheus_client metrics to time function execution timings
 from utils import REGISTRY
+
+StationsType = Collection[dict]
 
 METRICS = REGISTRY.get_metrics()
 
 
 @st.cache
 @METRICS.REQUEST_TIME.time()
-def find_close_stations(dist: int = 50, res: RES = RES.HOURLY):
+def find_close_stations(dist: int = 50, res: RES = RES.HOURLY) -> StationsType:
     """Find closest stations (dist: radius in km)"""
 
     dwd = DwdWeather(resolution=res.value)
@@ -48,29 +49,31 @@ def fetch_data(res: RES = RES.HOURLY):
 
 
 @st.cache
-def compute_center_coordinate(stations):
+def compute_center_coordinate(stations: StationsType) -> Tuple[float, float]:
     lat = np.array([x["geo_lat"] for x in stations]).mean()
     lon = np.array([x["geo_lon"] for x in stations]).mean()
     return float(lat), float(lon)
 
 
 @st.cache
-def compute_bounds(stations):
-    min_lat = np.array([x["geo_lat"] for x in stations]).min()
-    min_lon = np.array([x["geo_lon"] for x in stations]).min()
-    max_lat = np.array([x["geo_lat"] for x in stations]).max()
-    max_lon = np.array([x["geo_lon"] for x in stations]).max()
-    return [[float(min_lat), float(min_lon)], [float(max_lat), float(max_lon)]]
+def compute_bounds(
+    stations: StationsType,
+) -> Tuple[Tuple[float, float], Tuple[float, float]]:
+    min_lat = np.min(np.array([x["geo_lat"] for x in stations]))
+    min_lon = np.min(np.array([x["geo_lon"] for x in stations]))
+    max_lat = np.max(np.array([x["geo_lat"] for x in stations]))
+    max_lon = np.max(np.array([x["geo_lon"] for x in stations]))
+    return (float(min_lat), float(min_lon)), (float(max_lat), float(max_lon))
 
 
 @st.cache
-def create_chart(df):
+def create_chart(df: pd.DataFrame) -> alt.Chart:
     """Create (dummy) charts for popup items"""
     chart = alt.Chart(df).mark_line().encode(x="a", y="b").properties(height=100)
     return chart.to_json()
 
 
-def filter_by_dates(stations, start, end):
+def filter_by_dates(stations: StationsType, start: int, end: int) -> StationsType:
     filtered = []
     for station in stations:
         start_date = datetime.datetime.strptime(str(station["date_start"]), "%Y%m%d")
