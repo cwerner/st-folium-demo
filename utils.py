@@ -1,4 +1,4 @@
-from prometheus_client import Summary
+import prometheus_client
 
 
 class REGISTRY:
@@ -10,7 +10,7 @@ class REGISTRY:
             return cls
         else:
             # Register your metrics here
-            cls.REQUEST_TIME = Summary(
+            cls.REQUEST_TIME = prometheus_client.Summary(
                 "some_summary", "Time spent in processing request"
             )
             cls.inited = True
