@@ -9,12 +9,28 @@ from dwdweather import DwdWeather
 from folium import plugins
 from streamlit_folium import folium_static
 
-from .datastructures import RES, ifu, tereno_stations
-from .spatial import compute_bounds, compute_center_coordinate
-from .types import StationsType
-from .utils import REGISTRY
+from custom_types import StationsType
+from datastructures import RES, ifu, tereno_stations
+from spatial import compute_bounds, compute_center_coordinate
+from utils import REGISTRY
 
 METRICS = REGISTRY.get_metrics()
+
+
+icon_url = (
+    "https://www.kit-ausbildung.de/typo3conf/ext/"
+    + "dp_contentelements/Resources/Public/img/kit-logo-without-text.svg"
+)
+icon = folium.features.CustomIcon(icon_url, icon_size=(32, 32))
+
+# add marker for ifu
+info = """<b>KIT Campus Alpin</b></br>
+<center>
+<img src="https://www.imk-ifu.kit.edu/img/gesamtansicht_IFU.gif" width="100px"/>
+</center>
+"""
+
+info_popup = info + '<a href="https://www.imk-ifu.kit.edu" target="_blank">Homepage</a>'
 
 
 @st.cache
@@ -71,38 +87,26 @@ def filter_by_dates(stations: StationsType, start: int, end: int) -> StationsTyp
     return filtered
 
 
-def main():
-    st.beta_set_page_config(page_title="DWD Stations")
-
-    st.write("# DWD stations near IMK-IFU/ KIT 🏔🌦")
-
-    res = st.sidebar.selectbox(
+def select_data_resolution():
+    return st.sidebar.selectbox(
         "Data resolution",
         RES.names(),
         format_func=lambda x: x.value.replace("_", " ").capitalize(),
     )
-    dist = st.sidebar.slider(
+
+
+def select_max_station_distance():
+    return st.sidebar.slider(
         "Distance to IFU [km]", min_value=10, max_value=150, value=50, step=5
     )
-    closest_stations = find_close_stations(dist=dist, res=res)
 
-    years = st.sidebar.slider("Data coverage [year]", 1990, 2020, (2010, 2019))
-    closest_stations = filter_by_dates(closest_stations, *years)
 
-    st.write(f"Number of stations: {len(closest_stations)}")
+def select_observation_years():
+    return st.sidebar.slider("Data coverage [year]", 1990, 2020, (2010, 2019))
 
-    # get data
-    # data = fetch_data()
-    # print(data)
 
-    icon_url = (
-        "https://www.kit-ausbildung.de/typo3conf/ext/"
-        + "dp_contentelements/Resources/Public/img/kit-logo-without-text.svg"
-    )
-    icon = folium.features.CustomIcon(icon_url, icon_size=(32, 32))
-
-    # center on IFU (Campus Alpin)
-    m = folium.Map(location=compute_center_coordinate(closest_stations), tiles=None)
+def create_map(stations: StationsType, tereno_stations: StationsType, dist: int):
+    m = folium.Map(location=compute_center_coordinate(stations), tiles=None)
     folium.TileLayer("Stamen Toner", name="Stamen Toner").add_to(m)
     folium.TileLayer("Stamen Terrain", name="Stamen Terrain").add_to(m)
     folium.TileLayer("Stamen Watercolor", name="Stamen Watercolor").add_to(m)
@@ -110,16 +114,6 @@ def main():
 
     feature_group_tereno = folium.FeatureGroup("TERENO Sites")
     feature_group_dwd = folium.FeatureGroup("DWD Sites", control=False)
-
-    # add marker for ifu
-    info = """<b>KIT Campus Alpin</b></br>
-<center>
-<img src="https://www.imk-ifu.kit.edu/img/gesamtansicht_IFU.gif" width="100px"/>
-</center>
-"""
-    info_popup = (
-        info + '<a href="https://www.imk-ifu.kit.edu" target="_blank">Homepage</a>'
-    )
 
     folium.Marker(
         (ifu["geo_lat"], ifu["geo_lon"]), tooltip=info, popup=info_popup, icon=icon
@@ -133,7 +127,7 @@ def main():
         ).add_to(feature_group_tereno)
 
     # dwd stations
-    for station in closest_stations:
+    for station in stations:
         dummy_df = pd.DataFrame(
             {"a": range(100), "b": np.cumsum(np.random.normal(0, 0.1, 100))}
         )
@@ -159,7 +153,7 @@ def main():
     ).add_to(m)
 
     # fit bounds
-    bounds = compute_bounds(closest_stations)
+    bounds = compute_bounds(stations)
     m.fit_bounds(bounds)
 
     feature_group_tereno.add_to(m)
@@ -173,8 +167,27 @@ def main():
         force_separate_button=True,
     ).add_to(m)
 
-    # call to render Folium map in Streamlit
-    folium_static(m)
+    return m
+
+
+def main():
+    st.beta_set_page_config(page_title="DWD Stations")
+
+    st.write("# DWD stations near IMK-IFU/ KIT 🏔🌦")
+
+    data_resolution = select_data_resolution()
+    max_station_distance = select_max_station_distance()
+    observation_years = select_observation_years()
+
+    closest_stations = find_close_stations(
+        dist=max_station_distance, res=data_resolution
+    )
+    filtered_stations = filter_by_dates(closest_stations, *observation_years)
+
+    st.write(f"Number of stations: {len(filtered_stations)}")
+
+    station_map = create_map(filtered_stations, tereno_stations, max_station_distance)
+    folium_static(station_map)
 
 
 if __name__ == "__main__":
