@@ -5,13 +5,12 @@ import folium
 import numpy as np
 import pandas as pd
 import streamlit as st
-from dwdweather import DwdWeather
-from folium import plugins
-from streamlit_folium import folium_static
-
 from custom_types import StationsType
 from datastructures import RES, ifu, tereno_stations
+from dwdweather import DwdWeather
+from folium import plugins
 from spatial import compute_bounds, compute_center_coordinate
+from streamlit_folium import folium_static
 from utils import REGISTRY
 
 METRICS = REGISTRY.get_metrics()
