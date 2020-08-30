@@ -6,4 +6,5 @@ numpy
 pandas
 streamlit
 streamlit-folium
+-e .
 
