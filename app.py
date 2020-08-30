@@ -1,5 +1,4 @@
 import datetime
-from typing import Collection, Tuple
 
 import altair as alt
 import folium
@@ -10,10 +9,10 @@ from dwdweather import DwdWeather
 from folium import plugins
 from streamlit_folium import folium_static
 
-from datastructures import RES, ifu, tereno_stations
-from utils import REGISTRY
-
-StationsType = Collection[dict]
+from .datastructures import RES, ifu, tereno_stations
+from .spatial import compute_bounds, compute_center_coordinate
+from .types import StationsType
+from .utils import REGISTRY
 
 METRICS = REGISTRY.get_metrics()
 
@@ -46,24 +45,6 @@ def fetch_data(res: RES = RES.HOURLY):
 
     result = dwd.query(station_id=nearest["station_id"], timestamp=query_hour)
     return result
-
-
-@st.cache
-def compute_center_coordinate(stations: StationsType) -> Tuple[float, float]:
-    lat = np.array([x["geo_lat"] for x in stations]).mean()
-    lon = np.array([x["geo_lon"] for x in stations]).mean()
-    return float(lat), float(lon)
-
-
-@st.cache
-def compute_bounds(
-    stations: StationsType,
-) -> Tuple[Tuple[float, float], Tuple[float, float]]:
-    min_lat = np.min(np.array([x["geo_lat"] for x in stations]))
-    min_lon = np.min(np.array([x["geo_lon"] for x in stations]))
-    max_lat = np.max(np.array([x["geo_lat"] for x in stations]))
-    max_lon = np.max(np.array([x["geo_lon"] for x in stations]))
-    return (float(min_lat), float(min_lon)), (float(max_lat), float(max_lon))
 
 
 @st.cache
