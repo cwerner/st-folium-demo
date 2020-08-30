@@ -3,7 +3,7 @@ from typing import Tuple
 import numpy as np
 import streamlit as st
 
-from .custom_types import StationsType
+from src.stations.custom_types import StationsType
 
 
 @st.cache
