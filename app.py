@@ -25,6 +25,7 @@ tereno_stations = [
     {"name": "Rottenbuch", "geo_lat": 47.73032, "geo_lon": 11.03189},
 ]
 
+
 class RES(Enum):
     TENMIN = "10_minutes"
     HOURLY = "hourly"
@@ -34,13 +35,14 @@ class RES(Enum):
     def names():
         return list(map(lambda c: c, RES))
 
+
 st.beta_set_page_config(page_title="DWD Stations")
 
 
 @st.cache
 @METRICS.REQUEST_TIME.time()
 def find_close_stations(dist: int = 50, res: RES = RES.HOURLY):
-    "Find closest stations (dist: radius in km)"
+    """Find closest stations (dist: radius in km)"""
 
     dwd = DwdWeather(resolution=res.value)
     return dwd.nearest_station(lat=ifu["geo_lat"], lon=ifu["geo_lon"], surrounding=dist * 1000)
@@ -49,10 +51,8 @@ def find_close_stations(dist: int = 50, res: RES = RES.HOURLY):
 # @st.cache
 def fetch_data(res: RES = RES.HOURLY):
 
-    ifu = (47.476111, 11.062777)
-
     # Create client object.
-    dwd = DwdWeather(resolution=RES.value)
+    dwd = DwdWeather(resolution=res.value)
 
     # Find closest station to position.
     nearest = dwd.nearest_station(lat=ifu["geo_lat"], lon=ifu["geo_lon"])
@@ -98,7 +98,7 @@ def compute_bounds(stations):
 
 @st.cache
 def create_chart(df):
-    "Create (dummy) charts for popup items"
+    """Create (dummy) charts for popup items"""
     chart = alt.Chart(df).mark_line().encode(x="a", y="b").properties(height=100)
     return chart.to_json()
 
@@ -129,8 +129,8 @@ st.write(f"Number of stations: {len(closest_stations)}")
 # data = fetch_data()
 # print(data)
 
-ifu = (47.476180, 11.063350)
-icon_url = "https://www.kit-ausbildung.de/typo3conf/ext/dp_contentelements/Resources/Public/img/kit-logo-without-text.svg"
+icon_url = "https://www.kit-ausbildung.de/typo3conf/ext/" + \
+           "dp_contentelements/Resources/Public/img/kit-logo-without-text.svg"
 icon = folium.features.CustomIcon(icon_url, icon_size=(32, 32))
 
 # center on IFU (Campus Alpin)
@@ -152,9 +152,8 @@ info = """<b>KIT Campus Alpin</b></br>
 """
 info_popup = info + '<a href="https://www.imk-ifu.kit.edu" target="_blank">Homepage</a>'
 
-folium.Marker(ifu, tooltip=info, popup=info_popup, icon=icon).add_to(m)
-
-
+folium.Marker((ifu["geo_lat"], ifu["geo_lon"]),
+              tooltip=info, popup=info_popup, icon=icon).add_to(m)
 
 for station in tereno_stations:
     folium.Marker(
@@ -184,7 +183,7 @@ for station in closest_stations:
 # distance circle
 folium.Circle(
     radius=dist * 1000,
-    location=ifu,
+    location=(ifu["geo_lat"], ifu["geo_lon"]),
     dash_array="5",
     tooltip=f"{dist} km to IFU",
     color="crimson",
