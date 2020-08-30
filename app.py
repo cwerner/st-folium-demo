@@ -1,21 +1,21 @@
-import streamlit as st
-from streamlit_folium import folium_static
-import folium
-import altair as alt
-import pandas as pd
-import numpy as np
 import datetime
-from datetime import datetime
+from enum import Enum
+
+import altair as alt
+import folium
+import numpy as np
+import pandas as pd
+import streamlit as st
 from dwdweather import DwdWeather
 from folium import plugins
-from enum import Enum
+from streamlit_folium import folium_static
 
 # prometheus_client metrics to time function execution timings
 from utils import REGISTRY
 
 METRICS = REGISTRY.get_metrics()
 
-# ifu 
+# ifu
 ifu = {"name": "IFU", "geo_lat": 47.476180, "geo_lon": 11.063350}
 
 # tereno stations
@@ -45,7 +45,9 @@ def find_close_stations(dist: int = 50, res: RES = RES.HOURLY):
     """Find closest stations (dist: radius in km)"""
 
     dwd = DwdWeather(resolution=res.value)
-    return dwd.nearest_station(lat=ifu["geo_lat"], lon=ifu["geo_lon"], surrounding=dist * 1000)
+    return dwd.nearest_station(
+        lat=ifu["geo_lat"], lon=ifu["geo_lon"], surrounding=dist * 1000
+    )
 
 
 # @st.cache
@@ -61,7 +63,7 @@ def fetch_data(res: RES = RES.HOURLY):
 
     # The hour you're interested in.
     # The example is 2014-03-22 12:00 (UTC).
-    query_hour = datetime(2014, 3, 22, 12, 10)
+    query_hour = datetime.datetime(2014, 3, 22, 12, 10)
 
     result = dwd.query(station_id=nearest["station_id"], timestamp=query_hour)
     return result
@@ -129,8 +131,10 @@ st.write(f"Number of stations: {len(closest_stations)}")
 # data = fetch_data()
 # print(data)
 
-icon_url = "https://www.kit-ausbildung.de/typo3conf/ext/" + \
-           "dp_contentelements/Resources/Public/img/kit-logo-without-text.svg"
+icon_url = (
+    "https://www.kit-ausbildung.de/typo3conf/ext/"
+    + "dp_contentelements/Resources/Public/img/kit-logo-without-text.svg"
+)
 icon = folium.features.CustomIcon(icon_url, icon_size=(32, 32))
 
 # center on IFU (Campus Alpin)
@@ -152,8 +156,9 @@ info = """<b>KIT Campus Alpin</b></br>
 """
 info_popup = info + '<a href="https://www.imk-ifu.kit.edu" target="_blank">Homepage</a>'
 
-folium.Marker((ifu["geo_lat"], ifu["geo_lon"]),
-              tooltip=info, popup=info_popup, icon=icon).add_to(m)
+folium.Marker(
+    (ifu["geo_lat"], ifu["geo_lon"]), tooltip=info, popup=info_popup, icon=icon
+).add_to(m)
 
 for station in tereno_stations:
     folium.Marker(
