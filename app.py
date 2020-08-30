@@ -17,20 +17,26 @@ from utils import REGISTRY
 METRICS = REGISTRY.get_metrics()
 
 
-icon_url = (
-    "https://www.kit-ausbildung.de/typo3conf/ext/"
-    + "dp_contentelements/Resources/Public/img/kit-logo-without-text.svg"
-)
-icon = folium.features.CustomIcon(icon_url, icon_size=(32, 32))
+def define_kit_marker():
+    icon_url = (
+        "https://www.kit-ausbildung.de/typo3conf/ext/"
+        + "dp_contentelements/Resources/Public/img/kit-logo-without-text.svg"
+    )
+    kit_icon = folium.features.CustomIcon(icon_url, icon_size=(32, 32))
 
-# add marker for ifu
-info = """<b>KIT Campus Alpin</b></br>
+    kit_info = """<b>KIT Campus Alpin</b></br>
 <center>
 <img src="https://www.imk-ifu.kit.edu/img/gesamtansicht_IFU.gif" width="100px"/>
 </center>
+<a href="https://www.imk-ifu.kit.edu" target="_blank">Homepage</a>
 """
 
-info_popup = info + '<a href="https://www.imk-ifu.kit.edu" target="_blank">Homepage</a>'
+    return folium.Marker(
+        (ifu["geo_lat"], ifu["geo_lon"]),
+        tooltip=kit_info,
+        popup=kit_info,
+        icon=kit_icon,
+    )
 
 
 @st.cache
@@ -115,9 +121,7 @@ def create_map(stations: StationsType, tereno_stations: StationsType, dist: int)
     feature_group_tereno = folium.FeatureGroup("TERENO Sites")
     feature_group_dwd = folium.FeatureGroup("DWD Sites", control=False)
 
-    folium.Marker(
-        (ifu["geo_lat"], ifu["geo_lon"]), tooltip=info, popup=info_popup, icon=icon
-    ).add_to(m)
+    define_kit_marker().add_to(m)
 
     for station in tereno_stations:
         folium.Marker(
