@@ -1,10 +1,10 @@
-altair
-dwdweather2
-folium
-geopandas
-numpy
-pandas
-streamlit
-streamlit-folium
--e .
+#altair
+#dwdweather2
+#folium
+#geopandas
+#numpy
+#pandas
+#streamlit
+#streamlit-folium
+#-e .
 
